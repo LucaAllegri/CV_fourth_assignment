@@ -51,4 +51,4 @@ end
 close all;
 
 fprintf('Finished displaying video: %s\n', videoFile);
-ends
+end
