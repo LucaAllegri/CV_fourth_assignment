@@ -14,7 +14,7 @@ function [] = compareCDAlgo(videoFile, tau1, alpha, tau2)
 % tau2 is the threshold for the image differencing in the running average
 
 % Create a VideoReader object
-videoReader = VideoReader(videoFile);
+    videoReader = VideoReader(videoFile);
 
     while hasFrame(videoReader)
         frame = readFrame(videoReader);
@@ -52,12 +52,8 @@ videoReader = VideoReader(videoFile);
 
         %AGGIORNAMENTO BACKGROUND
         if frameIdx ~= 1
-            if abs(I_t - I_t_prev) <= tau2
-                background_actual = (1-alpha) * background_actual + alpha*I_t;
-                disp("ciao");
-            else
-                background_actual = background_actual;
-            end
+            mask = abs(I_t - I_t_prev) <= tau2;
+            background_actual(mask) = (1 - alpha) * background_actual(mask) + alpha * I_t(mask);
         end
 
 
@@ -90,10 +86,6 @@ videoReader = VideoReader(videoFile);
         pause(0.5);
 
         I_t_prev = I_t;
-    
-        % Fake image, just for the sake of running --> In the visualization
-        % below replace with the appropriate image
-        % fake_img = uint8(128*ones(size(frame)));
     end
 % Close the figure when playback is finished
 

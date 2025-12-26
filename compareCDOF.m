@@ -12,41 +12,70 @@ function [] = compareCDOF(videoFile, tau1, alpha, tau2, W)
 % W is the side of the square patch to compute the optical flow
 
 % Create a VideoReader object
-videoReader = VideoReader(videoFile);
-
-i = 0;
-
-% Loop through each frame of the video
-while hasFrame(videoReader)
-    % Read the next frame
-    frame = readFrame(videoReader);
-
-    % Display the frame
-    figure(1), subplot(2, 2, 1), imshow(frame, 'Border', 'tight');
-    title(sprintf('Frame %d', round(videoReader.CurrentTime * videoReader.FrameRate)));
-
-    % Fake image, just for the sake of running --> In the visualization
-    % below replace with the appropriate image
-    fake_img = uint8(128*ones(size(frame)));
-
-    % Display the map of the optical flow
-    % You can obtain the map by using the convertToMagDir function
-    figure(1), subplot(2,2, 2), imshow(fake_img, 'Border', 'tight');
-    title('Optical Flow');
-
-    % Display the running average
-    figure(1), subplot(2, 2, 4), imshow(fake_img, 'Border', 'tight');
-    title('Static background');
-
-    % Display the binary map obtained with the change detection
-    figure(1), subplot(2, 2, 3), imshow(fake_img, 'Border', 'tight');
-    title('Binary map 1');
+    videoReader = VideoReader(videoFile);
     
-    previous_frame = frame;
+    i = 0;
 
-    i = i + 1;
+    while hasFrame(videoReader)
+        frame = readFrame(videoReader);
+        I_ref = double(rgb2gray(frame));
+        background_actual = I_ref;
+        break;
+    end
 
-end
+    numFrames = ceil(videoReader.Duration * videoReader.FrameRate);
+    binaryMapsCell2 = cell(1, numFrames);
 
-fprintf('Finished displaying video: %s\n', videoFile);
+    frameIdx=0;
+
+    previous_frame = I_ref;
+    
+    % Loop through each frame of the video
+    while hasFrame(videoReader)
+        
+
+        frameIdx = frameIdx + 1;
+
+        frame = readFrame(videoReader);
+        I_t = double(rgb2gray(frame));
+
+        % BINARY MAP RUNNIGN AVERAGE
+        binaryMap2 = abs(I_t - background_actual) > tau1;
+
+        D_t = abs(I_t - previous_frame);
+
+        mask = D_t <= tau2;
+        background_actual(mask) = (1 - alpha) * background_actual(mask) + alpha * I_t(mask);
+  
+
+        binaryMapsCell2{frameIdx} = binaryMap2;
+
+        % All'interno del loop while di compareCDOF:
+        [u, v] = LucasKanade(previous_frame, I_t, W);
+        flowRGB = convertToMagDir(u, v);
+    
+        % Display the frame
+        figure(1), subplot(2, 2, 1), imshow(I_t, 'Border', 'tight');
+        title(sprintf('Frame %d', round(videoReader.CurrentTime * videoReader.FrameRate)));
+    
+        % Display the map of the optical flow
+        % You can obtain the map by using the convertToMagDir function
+        figure(1), subplot(2,2, 2), imshow(flowRGB, 'Border', 'tight');
+        title('Optical Flow');
+    
+        % Display the running average
+        figure(1), subplot(2, 2, 4), imshow(uint8(background_actual), 'Border', 'tight');
+        title('Static background');
+
+        % Display the binary map obtained with the change detection
+        figure(1), subplot(2, 2, 3), imshow(binaryMapsCell2{frameIdx}, 'Border', 'tight');
+        title('Binary map 1');
+        
+        previous_frame = I_t;
+    
+        i = i + 1;
+    
+    end
+    
+    fprintf('Finished displaying video: %s\n', videoFile);
 end
