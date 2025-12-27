@@ -52,6 +52,18 @@ while hasFrame(videoReader) && i <=1420
     mask = abs(I_t - I_t_prev) <= tau2;
     background_actual(mask) = (1 - alpha) * background_actual(mask) + alpha * I_t(mask);
 
+    % Display the frame
+    figure(1), subplot(2, 2, 1), imshow(frame, 'Border', 'tight');
+    title(sprintf('Frame %d', round(videoReader.CurrentTime * videoReader.FrameRate)));
+
+    % Display the binary map obtained with the static background
+    figure(1), subplot(2, 2, 2), imshow(binaryMap, 'Border', 'tight');
+    title('Binary map 1');
+
+    %Display the running average
+    %figure(1), subplot(2, 3, 3), imshow(uint8(background_actual), 'Border', 'tight');
+    %title('Running average');
+
     if(i == 1380)
         pause(5);
 
@@ -116,20 +128,6 @@ while hasFrame(videoReader) && i <=1420
         %   position --> Append the new position to the trajectory
 
     end
-
-    % Display the frame
-    figure(1), subplot(2, 2, 1), imshow(frame, 'Border', 'tight');
-    title(sprintf('Frame %d', round(videoReader.CurrentTime * videoReader.FrameRate)));
-    hold on;
-    plot(trajectory{i-1380}, '*r');
-
-    % Display the binary map obtained with the static background
-    figure(1), subplot(2, 2, 2), imshow(binaryMap, 'Border', 'tight');
-    title('Binary map 1');
-
-    %Display the running average
-    %figure(1), subplot(2, 3, 3), imshow(uint8(background_actual), 'Border', 'tight');
-    %title('Running average');
 
     i = i + 1;
 

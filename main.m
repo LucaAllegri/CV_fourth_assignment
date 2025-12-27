@@ -10,5 +10,7 @@
 
 %%POINT 3
 url = "https://www.dropbox.com/scl/fi/jrm1gql3gwaxgjj140cbz/DibrisHall.mp4?rlkey=k7dwli0lzbszxh95qmi22viz7&dl=1";
-segmentAndTrack(url, 10, 0.5, 10);
+b = segmentAndTrack(url, 10, 0.5, 10);
 
+
+% 300;100
