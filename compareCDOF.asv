@@ -31,7 +31,7 @@ function [] = compareCDOF(videoFile, tau1, alpha, tau2, W)
     previous_frame = I_ref;
     
     % Loop through each frame of the video
-    while hasFrame(videoReader) && frameIdx <=20
+    while hasFrame(videoReader) && frameIdx <=
         
 
         frameIdx = frameIdx + 1;
@@ -55,7 +55,7 @@ function [] = compareCDOF(videoFile, tau1, alpha, tau2, W)
         flowRGB = convertToMagDir(u, v);
     
         % Display the frame
-        figure(1), subplot(2, 2, 1), imshow(frame, 'Border', 'tight');
+        figure(1), subplot(2, 2, 1), imshow(I_t, 'Border', 'tight');
         title(sprintf('Frame %d', round(videoReader.CurrentTime * videoReader.FrameRate)));
     
         % Display the map of the optical flow
@@ -74,8 +74,6 @@ function [] = compareCDOF(videoFile, tau1, alpha, tau2, W)
         previous_frame = I_t;
     
         i = i + 1;
-
-        pause(0.5);
     
     end
     

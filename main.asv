@@ -7,8 +7,7 @@
 % url = 'https://www.dropbox.com/scl/fi/fekgrwwa507hzlx8ro0l1/tennis.mp4?rlkey=5yypbww8pte7xs6jwkno8619v&dl=1';
 % compareCDOF(url,10,0.5,4, 7);
 
-
 %%POINT 3
 url = "https://www.dropbox.com/scl/fi/jrm1gql3gwaxgjj140cbz/DibrisHall.mp4?rlkey=k7dwli0lzbszxh95qmi22viz7&dl=1";
-segmentAndTrack(url, 10, 0.5, 10);
+segmentAndTrack(url, 10, 0)
 

@@ -12,7 +12,7 @@ videoReader = VideoReader(videoFile);
 i = 0;
 
 % Loop through each frame of the video
-while hasFrame(videoReader)
+while hasFrame(videoReader) && i <=20
     % Read the next frame
     frame = readFrame(videoReader);
 
@@ -24,6 +24,7 @@ while hasFrame(videoReader)
 
     if(i == 1380)
         pause;
+
 
         % In this frame there is a person wearing in white, this is the
         % target you must track
