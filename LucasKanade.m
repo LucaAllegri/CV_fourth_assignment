@@ -1,4 +1,4 @@
-function [u, v] = LucasKanade(im1, im2, windowSize);
+function [u, v] = LucasKanade(im1, im2, windowSize)
 % Optical Flow - Lucas Kanade algorithm
 % INPUT: im1, im2 two adjacent image frames (instants t and t+1)
 %        windowSize the size of a local neighbourhood
@@ -6,63 +6,77 @@ function [u, v] = LucasKanade(im1, im2, windowSize);
 %---------------------------------------------------------------------
 
 
-% images check
-if (size(im1,1)~=size(im2,1)) | (size(im1,2)~=size(im2,2))
-    error('the two frames have different sizes');
-end;
-
-if (size(im1,3) ~= 1) | (size(im2, 3) ~= 1)
-    error('images must be gray level');
-end;
-
-% compute space and time derivatives
-[fx, fy, ft] = ComputeDerivatives(im1, im2);
-
-u = zeros(size(im1));
-v = zeros(size(im1));
-
-halfW = floor(windowSize/2);
-
-%  for each pixel of an image I build a least square system 
-for i = halfW+1 : size(fx,1)-halfW
-   for j = halfW+1:size(fx,2)-halfW
-      
-      A = ... fill here ... ;
-      b = ... fill here ... ;
-      U = ... fill here ... ;
-      
-      u(i,j)=U(1);
-      v(i,j)=U(2);
-      
-   end;
-end;
-
-% adjust NaN
- u(isnan(u))=0;
- v(isnan(v))=0;
- 
- 
+    % images check
+    if (size(im1,1)~=size(im2,1)) | (size(im1,2)~=size(im2,2))
+        error('the two frames have different sizes');
+    end
+    
+    if (size(im1,3) ~= 1) | (size(im2, 3) ~= 1)
+        error('images must be gray level');
+    end
+    
+    % compute space and time derivatives
+    [fx, fy, ft] = ComputeDerivatives(im1, im2);
+    
+    u = zeros(size(im1));
+    v = zeros(size(im1));
+    
+    halfW = floor(windowSize/2);
+    
+    %  for each pixel of an image I build a least square system 
+    for i = halfW+1 : size(fx,1)-halfW
+       for j = halfW+1:size(fx,2)-halfW
+          
+          % Estraiamo le derivate locali per la finestra centrata in (i,j)
+          Ix=fx(i-halfW:i+halfW, j-halfW:j+halfW);
+          Iy=fy(i-halfW:i+halfW, j-halfW:j+halfW);
+          It=ft(i-halfW:i+halfW, j-halfW:j+halfW);
+    
+          % Costruiamo la matrice A (derivate spaziali) e il vettore b (derivata temporale)
+          % A deve essere una matrice N x 2, dove N è il numero di pixel nella finestra (windowSize^2)
+          A=[Ix(:), Iy(:)];
+          
+          % b è il vettore colonna delle derivate temporali (negate per la formula Ax = b)
+          b=-It(:);
+          
+          % Risoluzione tramite pseudo-inversa (Minimi Quadrati) [cite: 155, 157]
+          % u = (A' * A)^-1 * A' * b
+          U=pinv(A) * b;
+    
+       
+          
+          u(i,j)=U(1);
+          v(i,j)=U(2);
+          
+       end
+    end
+    
+    % adjust NaN
+     u(isnan(u))=0;
+     v(isnan(v))=0;
+end
       
 %--------------------------------------------------------------------------
-function [fx, fy, ft] = ComputeDerivatives(im1, im2);
-
-if (size(im1,1) ~= size(im2,1)) | (size(im1,2) ~= size(im2,2))
-   error('the two frames have different sizes');
-end;
-
-if (size(im1,3)~=1) | (size(im2,3)~=1)
-   error('images must be gray level');
-end;
-
-% derivative estimation through convolution
-fx = conv2(double(im1),0.25* [-1 1; -1 1]) + conv2(double(im2), 0.25*[-1 1; -1 1]);
-fy = conv2(double(im1), 0.25*[-1 -1; 1 1]) + conv2(double(im2), 0.25*[-1 -1; 1 1]);
-ft = conv2(double(im1), 0.25*ones(2)) + conv2(double(im2), -0.25*ones(2));
-
-% adjusting the images size
-fx=fx(1:size(fx,1)-1, 1:size(fx,2)-1);
-fy=fy(1:size(fy,1)-1, 1:size(fy,2)-1);
-ft=ft(1:size(ft,1)-1, 1:size(ft,2)-1);
+function [fx, fy, ft] = ComputeDerivatives(im1, im2)
+    
+    if (size(im1,1) ~= size(im2,1)) | (size(im1,2) ~= size(im2,2))
+       error('the two frames have different sizes');
+    end
+    
+    if (size(im1,3)~=1) | (size(im2,3)~=1)
+       error('images must be gray level');
+    end
+    
+    % derivative estimation through convolution
+    fx = conv2(double(im1),0.25* [-1 1; -1 1]) + conv2(double(im2), 0.25*[-1 1; -1 1]);
+    fy = conv2(double(im1), 0.25*[-1 -1; 1 1]) + conv2(double(im2), 0.25*[-1 -1; 1 1]);
+    ft = conv2(double(im1), 0.25*ones(2)) + conv2(double(im2), -0.25*ones(2));
+    
+    % adjusting the images size
+    fx=fx(1:size(fx,1)-1, 1:size(fx,2)-1);
+    fy=fy(1:size(fy,1)-1, 1:size(fy,2)-1);
+    ft=ft(1:size(ft,1)-1, 1:size(ft,2)-1);
+end
 
 
 
