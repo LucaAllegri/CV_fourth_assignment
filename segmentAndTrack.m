@@ -25,7 +25,7 @@ trajectory = cell(1, numFrames-1380);
 %I_t_prev = I_ref;
 
 % Imposta il frame di partenza desiderato
-frameDiPartenza = 1370; 
+frameDiPartenza = 1350; 
 
 % Sposta il "cursore" del video al tempo corrispondente
 videoReader.CurrentTime = (frameDiPartenza - 1) / videoReader.FrameRate; 
@@ -40,7 +40,7 @@ I_t_prev = double(rgb2gray(frameIniziale));
 background_actual = I_t_prev;
 
 % Loop through each frame of the video
-while hasFrame(videoReader) && i <=1420
+while hasFrame(videoReader) && i <= 1450
     % Read the next frame
     frame = readFrame(videoReader);
     I_t = double(rgb2gray(frame));
@@ -61,11 +61,13 @@ while hasFrame(videoReader) && i <=1420
         % Pick a point manually on the person to initialize your trajectory
 
         stat = regionprops(binaryMap, "Area", "Centroid");
-        [~, index] = max(stat.Area);
+        aree = [stat.Area];
+        [~, index] = max(aree);
         c = stat(index).Centroid;
 
         trajectory{i-1379} = c;
 
+        disp(c);
 
      
 
@@ -109,6 +111,8 @@ while hasFrame(videoReader) && i <=1420
 
         trajectory{i-1379} = nuovoCentroide;
 
+        disp(nuovoCentroide);
+
 
 
         % * Now you have the positions of all connected components observed
@@ -118,14 +122,22 @@ while hasFrame(videoReader) && i <=1420
     end
 
     % Display the frame
-    figure(1), subplot(2, 2, 1), imshow(frame, 'Border', 'tight');
-    title(sprintf('Frame %d', round(videoReader.CurrentTime * videoReader.FrameRate)));
-    hold on;
-    plot(trajectory{i-1380}, '*r');
+    figure(1), subplot(1, 2, 1), imshow(frame, 'Border', 'tight');
+    title(sprintf('Frame %d', i));
+    if(i>1380)
+        hold on;
+        p = trajectory{i-1379};  
+        plot(p(1), p(2), '*r');
+    end
 
     % Display the binary map obtained with the static background
-    figure(1), subplot(2, 2, 2), imshow(binaryMap, 'Border', 'tight');
-    title('Binary map 1');
+    figure(1), subplot(1, 2, 2), imshow(binaryMap, 'Border', 'tight');
+    title('Binary map');
+    if(i>1380)
+        hold on;
+        p = trajectory{i-1379};
+        plot(p(1), p(2), '*r');
+    end
 
     %Display the running average
     %figure(1), subplot(2, 3, 3), imshow(uint8(background_actual), 'Border', 'tight');
