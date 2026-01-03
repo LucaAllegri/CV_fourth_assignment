@@ -1,4 +1,4 @@
-function [binaryMap2] = segmentAndTrack(videoFile, tau1, alpha, tau2) 
+function [] = segmentAndTrack(videoFile, tau1, alpha, tau2) 
 % This function ...
 % tau1 is the threshold for the change detection
 % alpha is the parameter to weight the contribution of current image and
@@ -11,36 +11,21 @@ videoReader = VideoReader(videoFile);
 numFrames = ceil(videoReader.Duration * videoReader.FrameRate);
 trajectory = cell(1, numFrames-1380);
 
+% First frame number
+NumFrame = 1310; 
 
-%i = 0;
+% Read FirstFrame
+videoReader.CurrentTime = (NumFrame - 1) / videoReader.FrameRate; 
 
-%while hasFrame(videoReader)
-%        frame = readFrame(videoReader);
-%        I_ref = double(rgb2gray(frame));
-%        break;
-%end
+i = NumFrame; 
 
-%background_actual = I_ref;
-
-%I_t_prev = I_ref;
-
-% Imposta il frame di partenza desiderato
-frameDiPartenza = 1350; 
-
-% Sposta il "cursore" del video al tempo corrispondente
-videoReader.CurrentTime = (frameDiPartenza - 1) / videoReader.FrameRate; 
-
-% Inizializza l'indice i al valore corretto
-i = frameDiPartenza; 
-
-% Inizializza anche I_t_prev e background_actual leggendo il frame attuale
-% altrimenti le operazioni di differenza daranno errore
-frameIniziale = readFrame(videoReader);
-I_t_prev = double(rgb2gray(frameIniziale));
+% Initializing values
+FirstFrame = readFrame(videoReader);
+I_t_prev = double(rgb2gray(FirstFrame));
 background_actual = I_t_prev;
 
 % Loop through each frame of the video
-while hasFrame(videoReader) && i <= 1450
+while hasFrame(videoReader) && i <= 1500
     % Read the next frame
     frame = readFrame(videoReader);
     I_t = double(rgb2gray(frame));
@@ -53,9 +38,8 @@ while hasFrame(videoReader) && i <= 1450
     background_actual(mask) = (1 - alpha) * background_actual(mask) + alpha * I_t(mask);
 
     if(i == 1380)
-        pause(5);
+        pause(2);
 
-    binaryMap2 = binaryMap;
         % In this frame there is a person wearing in white, this is the
         % target you must track
         % Pick a point manually on the person to initialize your trajectory
@@ -67,7 +51,7 @@ while hasFrame(videoReader) && i <= 1450
 
         trajectory{i-1379} = c;
 
-        disp(c);
+       
 
      
 
@@ -84,40 +68,31 @@ while hasFrame(videoReader) && i <= 1450
 
         props = regionprops(connected, "Area", "Centroid");
 
-        % 2. Estrai tutte le aree in un vettore numerico
         aree = [props.Area];
         
-        % 3. Crea un indice logico per le aree maggiori di 30
-        indiceFiltro = aree > 30;
+        % prop threshold area
+        FilterIndex = aree > 30;
         
-        % 4. Applica il filtro alla struttura originale
-        propsFiltrati = props(indiceFiltro);
-        
-        centr_prev = trajectory{i-1380};
-
-        % 2. Estrai tutti i centroidi dei candidati in una matrice [N x 2]
-        tuttiICentroidi = cat(1, propsFiltrati.Centroid);
-        
-        % 3. Calcola la distanza Euclidea tra il target e ogni candidato
-        % (x2-x1)^2 + (y2-y1)^2
-        differenze = tuttiICentroidi - centr_prev;
-        distanze = sqrt(sum(differenze.^2, 2));
-        
-        % 4. Trova l'indice del centroide con la distanza minima
-        [~, idxVicino] = min(distanze);
-        
-        % 5. Seleziona il nuovo centroide per aggiornare la traiettoria
-        nuovoCentroide = tuttiICentroidi(idxVicino, :);
-
-        trajectory{i-1379} = nuovoCentroide;
-
-        disp(nuovoCentroide);
-
-
+        % keep only true props
+        propsFiltrati = props(FilterIndex);
 
         % * Now you have the positions of all connected components observed
         %   in the current frame and you can associate the target to its new
         %   position --> Append the new position to the trajectory
+        
+        % find nearest centroid respect to previous with area > 30
+        centr_prev = trajectory{i-1380};
+        tuttiICentroidi = cat(1, propsFiltrati.Centroid);
+    
+        differenze = tuttiICentroidi - centr_prev;
+        distanze = sqrt(sum(differenze.^2, 2));
+        
+        [~, idxVicino] = min(distanze);
+        
+        nuovoCentroide = tuttiICentroidi(idxVicino, :);
+
+        % adding to trajectory
+        trajectory{i-1379} = nuovoCentroide;
 
     end
 
@@ -130,7 +105,7 @@ while hasFrame(videoReader) && i <= 1450
         plot(p(1), p(2), '*r');
     end
 
-    % Display the binary map obtained with the static background
+    % Display the binary map
     figure(1), subplot(1, 2, 2), imshow(binaryMap, 'Border', 'tight');
     title('Binary map');
     if(i>1380)
@@ -139,21 +114,35 @@ while hasFrame(videoReader) && i <= 1450
         plot(p(1), p(2), '*r');
     end
 
-    %Display the running average
-    %figure(1), subplot(2, 3, 3), imshow(uint8(background_actual), 'Border', 'tight');
-    %title('Running average');
-
     i = i + 1;
 
-    pause(0.5);
+    pause(0.2);
 
 end
 
  % * At the end of the video, visualize the trajectory in the last
  %   frame
 
+% New figure
+figure('Name', 'Final Trajectory', 'Color', 'w');
+imshow(frame); 
+hold on;
+
+% Extract points from trajectory
+puntiValidi = trajectory(~cellfun(@isempty, trajectory));
+puntiMatrice = cat(1, puntiValidi{:});
+
+% Draw trajectory
+if ~isempty(puntiMatrice)
+    plot(puntiMatrice(:,1), puntiMatrice(:,2), 'r-', 'LineWidth', 2); 
+    plot(puntiMatrice(:,1), puntiMatrice(:,2), 'r.', 'MarkerSize', 10);
+    plot(puntiMatrice(end,1), puntiMatrice(end,2), 'yo', 'MarkerSize', 12, 'LineWidth', 2);
+end
+hold off;
+
+
 % Close the figure when playback is finished
-%close all;
+% close all;
 
 fprintf('Finished displaying video: %s\n', videoFile);
 end

@@ -16,6 +16,7 @@ function [] = compareCDOF(videoFile, tau1, alpha, tau2, W)
     
     i = 0;
 
+    % take first frame and ref frame
     while hasFrame(videoReader)
         frame = readFrame(videoReader);
         I_ref = double(rgb2gray(frame));
@@ -23,6 +24,7 @@ function [] = compareCDOF(videoFile, tau1, alpha, tau2, W)
         break;
     end
 
+    % initializing data structure for binary map
     numFrames = ceil(videoReader.Duration * videoReader.FrameRate);
     binaryMapsCell2 = cell(1, numFrames);
 
@@ -50,8 +52,10 @@ function [] = compareCDOF(videoFile, tau1, alpha, tau2, W)
 
         binaryMapsCell2{frameIdx} = binaryMap2;
 
-        % All'interno del loop while di compareCDOF:
+        % LucasKanade algorithm
         [u, v] = LucasKanade(previous_frame, I_t, W);
+
+        % You can obtain the map by using the convertToMagDir function
         flowRGB = convertToMagDir(u, v);
     
         % Display the frame
@@ -59,7 +63,6 @@ function [] = compareCDOF(videoFile, tau1, alpha, tau2, W)
         title(sprintf('Frame %d', round(videoReader.CurrentTime * videoReader.FrameRate)));
     
         % Display the map of the optical flow
-        % You can obtain the map by using the convertToMagDir function
         figure(1), subplot(2,2, 2), imshow(flowRGB, 'Border', 'tight');
         title('Optical Flow');
     
@@ -75,7 +78,7 @@ function [] = compareCDOF(videoFile, tau1, alpha, tau2, W)
     
         i = i + 1;
 
-        pause(0.5);
+        pause(0.2);
     
     end
     

@@ -27,24 +27,21 @@ function [u, v] = LucasKanade(im1, im2, windowSize)
     for i = halfW+1 : size(fx,1)-halfW
        for j = halfW+1:size(fx,2)-halfW
           
-          % Estraiamo le derivate locali per la finestra centrata in (i,j)
+          % Extract local derivatives
           Ix=fx(i-halfW:i+halfW, j-halfW:j+halfW);
           Iy=fy(i-halfW:i+halfW, j-halfW:j+halfW);
           It=ft(i-halfW:i+halfW, j-halfW:j+halfW);
     
-          % Costruiamo la matrice A (derivate spaziali) e il vettore b (derivata temporale)
-          % A deve essere una matrice N x 2, dove N è il numero di pixel nella finestra (windowSize^2)
+          % Build matrix A
           A=[Ix(:), Iy(:)];
           
-          % b è il vettore colonna delle derivate temporali (negate per la formula Ax = b)
+          % Build matrix b
           b=-It(:);
           
-          % Risoluzione tramite pseudo-inversa (Minimi Quadrati) [cite: 155, 157]
-          % u = (A' * A)^-1 * A' * b
+          % U obtained using pseudo-inverse
           U=pinv(A) * b;
     
-       
-          
+          % Update optical flow maps for the current pixel
           u(i,j)=U(1);
           v(i,j)=U(2);
           

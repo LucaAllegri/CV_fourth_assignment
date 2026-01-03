@@ -16,22 +16,21 @@ function [] = compareCDAlgo(videoFile, tau1, alpha, tau2)
 % Create a VideoReader object
     videoReader = VideoReader(videoFile);
 
+    % take first frame and ref frame
     while hasFrame(videoReader)
         frame = readFrame(videoReader);
         I_ref = double(rgb2gray(frame));
         break;
     end
 
+    % initializing data structure for binary maps and background
     numFrames = ceil(videoReader.Duration * videoReader.FrameRate);
     binaryMapsCell1 = cell(1, numFrames);
-
     binaryMapsCell2 = cell(1, numFrames);
 
+    % background is just first frame, not an average of n frames
     background_actual = I_ref;
 
-    % backgroundMapsCell{1} = I_ref;
-
-    % binaryMap1 = I_ref;
     frameIdx = 0;
 
     I_t_prev = I_ref;
@@ -50,16 +49,13 @@ function [] = compareCDAlgo(videoFile, tau1, alpha, tau2)
         % BINARY MAP RUNNIGN AVERAGE
         binaryMap2 = abs(I_t - background_actual) > tau1;
 
-        %AGGIORNAMENTO BACKGROUND
+        %BACKGROUND UPDATING
         if frameIdx ~= 1
             mask = abs(I_t - I_t_prev) <= tau2;
             background_actual(mask) = (1 - alpha) * background_actual(mask) + alpha * I_t(mask);
         end
 
-
-        
-        % SALVATAGGIO NEL CELL ARRAY
-        % Ogni cella {index} contiene l'intera matrice binaria del frame
+        % Save binary maps
         binaryMapsCell1{frameIdx} = binaryMap1;
         binaryMapsCell2{frameIdx} = binaryMap2;
     
@@ -75,15 +71,15 @@ function [] = compareCDAlgo(videoFile, tau1, alpha, tau2)
         figure(1), subplot(2, 3, 3), imshow(binaryMapsCell1{frameIdx}, 'Border', 'tight');
         title('Binary map 1');
 
-        %Display the running average
+        % Display the running average
         figure(1), subplot(2, 3, 5), imshow(uint8(background_actual), 'Border', 'tight');
         title('Running average');
     
-        %Display the binary map obtained with the running average
+        % Display the binary map obtained with the running average
         figure(1), subplot(2, 3, 6), imshow(binaryMapsCell2{frameIdx}, 'Border', 'tight');
         title('Binary map 2');
 
-        pause(0.5);
+        pause(0.2);
 
         I_t_prev = I_t;
     end
